@@ -7,7 +7,7 @@ output:
     toc_depth: 3
 ---
 
-# 1. Introduction
+## 1. Introduction
 In this practical you will analyse data from an experiment to examine proteins involved in the cell cycle (See diagram below). Cells from a human cell line were treated with Nocodazole to inhibit polymerisation of microtubules and block transition beyond the prometaphase stage of M-phase. Cells were then released from M-phase by withdrawing Nocodazole. Samples were taken in triplicate 0h and 5h after release to generate 3 x M-phase and 3 x G1-phase samples. In order to measure protein abundances, proteins were first digested to peptides with trypsin. The same quantity of peptides from each sample was then labelled using a TMT 6 plex. This allows all the samples to be combined into a single MS run to yield quantification over the same peptides in each sample. The peptide spectrum matching and quantification steps have already been completed and the peptide-level quantification is provided to you.
 
 ![](images/experimental_plan.png)
@@ -37,9 +37,9 @@ suppressMessages(library(ggplot2))
 ```
 
 
-# 2. Preparing the data
+## 2. Preparing the data
 
-## 2a. Read in the peptide-level quantification
+### 2a. Read in the peptide-level quantification
 We'll start by reading the peptide-level quantification data into a dataframe. For the purposes of this practical, peptides which cannot be uniquely assigned to a single protein have been removed. Peptides which come from proteins in the [cRAP database](http://www.thegpm.org/crap/) of common proteomics contaminates, e.g keratin, have also been removed. The data is provided here in a tab-separated text file `"data/peptide_data.tsv"`. 
 
 If we take a look at the colnames of the `peptide_quant` dataframe, we can see we have 9 columns. The first 3 columns describe the sequence of the peptide, the modifications which were detected and the protein which the peptide has been assigned to. The next 6 columns provide the quantification values for the 3 M-phase and 3 G1-phase samples.
@@ -70,7 +70,7 @@ peptides_quant %>%
 
 ***
 
-## 2b. Aggregating the quantification data to generate protein-level quantification
+### 2b. Aggregating the quantification data to generate protein-level quantification
 
 We can aggregate the quantification values across the multiple instances of the same peptide with difference modifications using the `dyplr` package
 
@@ -84,7 +84,7 @@ peptides_quant_no_mods <- peptides_quant %>%
 print(head(peptides_quant_no_mods))
 ```
 
-## 2c. Dealing with missing values
+### 2c. Dealing with missing values
 
 We still have peptides with missing values
 ```{r}
@@ -111,7 +111,7 @@ peptides_quant_no_mods_no_na <- peptides_quant_no_mods %>% na.omit()
 
 Before we proceed with the aggregation to protein-level quantification, we should consider whether we need to perform any normalisation to the data.  The total peptide abundance in each column should be approximately the same. However, we can see below that this is not the case
 
-## 2d. Normalisation
+### 2d. Normalisation
 ```{r}
 pep_tots <- peptides_quant_no_mods_no_na %>%
   select(one_of(quant_columns)) %>%
@@ -188,7 +188,7 @@ print(head(protein_quant))
 
 ***
 
-# 3. Performing a statistical test to identify changes in protein abundance
+## 3. Performing a statistical test to identify changes in protein abundance
 
 Next we want to identify the proteins which have a statistically significant change in abundance between M and G1 phases. For the purposes of this practical, we will only consider frequentist statistics here. Formally, we set out a null hypothesis (H0) that the change in abundance for a protein is zero and test the alternative hypothesis (H1) that the change is greater than zero. For each protein we will conduct an independent statistical test. The important points to consider when choosing the appropriate statistical test are:
 
@@ -206,7 +206,7 @@ This is a very simple experimental design and we recommend that you use a studen
 *Q5b. Do you need to perform any transformation on the data before conducting the t-test?*
 
 
-*Q5b. What are the assumptions of the t-test and do these assumptions hold for this data? *
+*Q5c. What are the assumptions of the t-test and do these assumptions hold for this data? *
 
 
 *Q5d. How low does the p-value have to be before you reject H0 (what’s your value for alpha)?*
@@ -245,7 +245,7 @@ TTest_results[c("p.value", "difference", "CI_diff_low", "CI_diff_high")] <- t(ap
 
 ```
 
-## 3a. Accounting for multiple hypothesis test
+### 3a. Accounting for multiple hypothesis test
 
 
 *Q6. For your chosen level of alpha, how many proteins would you expect to have a significant change in abundance by chance (false positives; Type I errors) ?*
@@ -297,7 +297,7 @@ p2 <- p + geom_errorbarh(aes(xmin=CI_diff_low, xmax=CI_diff_high, colour=sig)) +
 
 print(p2)
 ```
-## 3b. Selecting the most relevant changes
+### 3b. Selecting the most relevant changes
 
 Depending on how you answered Q6e, you may not be concerned that many of the changes are relatively small. However, it's reasonable to assume a very small change in abundance is unlikely to be biologically relevant. Therefore, it's beneficial to also threshold on the scale of the change, the so called "effect size". We could simply apply a threshold on the point estimate of the difference between the two populations. However, this would not take account of the confidence we have about the true difference between the two populations. For a more explanation of the pitfalls of thresholding on the point estimate, see the example at the bottom of this notebook.
 
@@ -354,9 +354,9 @@ print(p)
 
 ***
 
-# 4. Functional analysis of proteins with differential abundance
+## 4. Functional analysis of proteins with differential abundance
 
-## 4a. What are the proteins
+### 4a. What are the proteins
 
 Now that we've identified the proteins which have a different abundance in G1-phase vs. M-phase, the next step is to investigate the functions for these proteins. First, let's add the protein names and descriptions
 
@@ -383,7 +383,7 @@ TTest_results_annotated %>%
 ```
 Can you see what functions some of these proteins might have based on their descriptions? As with most such analyses there will likely be some proteins you have heard of, but many more which you haven’t. After all, there are ~20,000 proteins in the human genome! It’s also very hard just by looking at the proteins which have changed to understand what shared functional pathways they may have in common. Many of the protein’s functions may not be obvious just from their description. Likewise, the sub-cellular localisation may not be obvious, and it could be that most of the proteins with altered abundance have the same localisation which would be an interesting observation in of itself. Even if you were a fountain of knowledge on human proteins, it’s difficult by eye to know if an observation if unexpected. For example, if you see 4 kinases which are all more abundant in G1, is this a relevant observation? To answer this, you would need to know how many kinases could have changed abundance in your experiment, from which you can estimate how many kinases you would expect to see by chance given the number of proteins with an altered abundance. In short, just looking at the protein descriptions will only get you so far. 
 
-## 4b. Identifying over-representation of particular protein functions/localisations
+### 4b. Identifying over-representation of particular protein functions/localisations
 
 Thankfully, the [Gene Ontology (GO) consortium](http://www.geneontology.org/) have defined a set of descriptions for genes and their protein products, split into 3 categories, Molecular Functions, Biological Processes and Cellular Localisations. These terms are hierarchical. For example as shown [here](https://www.ebi.ac.uk/QuickGO/term/GO:0003723), “RNA binding” is a child term of “Nucleic acid binding” and a parent term of e.g “RNA cap binding”. 
 
@@ -464,7 +464,7 @@ If you want to continue, you can investigate the affect of changing the threshol
 
 ***
 
-### Simulation to demonstrate the pitfalls of thresholding on the point estimate
+#### Simulation to demonstrate the pitfalls of thresholding on the point estimate
 
 Below is a concrete example to help make clear why thresholding on the point estimate of the difference between two means is not a sensible approach. Below, we simulate the process of sampling from two populations where the true difference between the means is 0.4. The number of replicates and the standard deviation are varied, and for each combination, we perform 1000 iterations. Here we are only interested in differences > 0.5, so whenever we detect a change over our threshold, this is a false positive.
 
