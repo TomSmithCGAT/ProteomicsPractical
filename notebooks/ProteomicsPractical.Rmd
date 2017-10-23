@@ -8,7 +8,7 @@ output:
 ---
 
 ## 1. Introduction
-In this practical you will analyse data from an experiment to examine proteins involved in the cell cycle (See diagram below). Cells from a human cell line were treated with Nocodazole to inhibit polymerisation of microtubules and block transition beyond the prometaphase stage of M-phase. Cells were then released from M-phase by withdrawing Nocodazole. Samples were taken in triplicate 0h and 5h after release to generate 3 x M-phase and 3 x G1-phase samples. In order to measure protein abundances, proteins were first digested to peptides with trypsin. The same quantity of peptides from each sample was then labelled with a TMT 6 plex tag. This allows all the samples to be combined into a single MS run to yield quantification over the same peptides in each sample. The peptide spectrum matching and quantification steps have already been completed and the peptide-level quantification is provided to you.
+In this practical you will analyse data from an experiment to examine proteins involved in the cell cycle (See diagram below). Cells from a human cell line were treated with Nocodazole to inhibit polymerisation of microtubules and block transition beyond the prometaphase stage of M-phase. Cells were then released from M-phase by withdrawing Nocodazole. Samples were taken in triplicate 0h and 5h after release to generate 3 x M-phase and 3 x G1-phase samples from 6 separate batches of cells. In order to measure protein abundances, proteins were first digested to peptides with trypsin. The same quantity of peptides from each sample was then labelled with a TMT 6 plex tag. This allows all the samples to be combined into a single MS run to yield quantification over the same peptides in each sample. The peptide spectrum matching and quantification steps have already been completed and the peptide-level quantification is provided to you.
 
 ![](images/experimental_plan.png)
 
@@ -166,13 +166,9 @@ plotPeptideAbundance(peptides_quant_no_mods_no_na, "Pre-normalisation")
 plotPeptideAbundance(peptides_quant_norm, "Post-normalisation")
 
 ```
-
 Now we have a single quantification value for each peptide, we can aggregate across the different peptides for the same protein to obtain the protein-level quantification. Here we are using the median.
 
-
-*Q4. Why do you think we are using the median here? What other mathematical operations could we use and what are the relative merits?*
-
-
+*Q4. Why do you think we are using the median to aggregate across the different peptides? What other mathematical operations could we use and what are the relative merits?*
 ```{r}
 protein_quant <- peptides_quant_norm  %>%
   select(-one_of(c("Sequence"))) %>% # exclude the Sequence column
@@ -196,6 +192,7 @@ Next we want to identify the proteins which have a statistically significant cha
 * The samples are not paired, e.g M-phase replicate 1 and G1-phase replicate 1 are not related samples
 * We want to identify changes in both directions
 * The protein abundances are not Gaussian (normal) distributed. However, they are approximately log-Gaussian distributed.
+* The cell cycle stage is not expected to have a large impact on the bioliogical variability
 
 This is a very simple experimental design and we recommend that you use a student’s t-test for this practical. However, there are other statistical tests which would also be suitable. For example, if one was concerned about whether the protein abundances are truly approximately Guassian, a non-parametric test such as the Mann-Whitney U test or Wilcoxon rank-sum tests may be used depending on the exact experimental design. Alternatively, if the experimental design was more complicated and we wished to take into account cofounding factors, or investigate interactions between factors, we could use ANOVA or Linear Regression.
 
